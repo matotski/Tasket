@@ -22,18 +22,32 @@
 
 <body>
     {% for user in users %}
-    {% if not user.is_superuser %}
-    <div class="employee_info">
-        <p>Сотрудник: {{ user.first_name }} {{ user.last_name }}</p>
-        <img src="{{ user.image.url }}" alt="Vlадимир" >
-    </div>
-    <p>Email: {{ user.email }}</p>
-    <p>Должность: {{ user.role }}</p>
-    <p>Текущие проекты: {{ user.ongoing_projects }}</p>
-    <p>Текущие задания: {{ user.ongoing_tasks }}</p>
-    <br>
-    <br>
-    {% endif %}
+        {% if not user.is_superuser %}
+            <div class="employee_info">
+                <p>Сотрудник: {{ user.first_name }} {{ user.last_name }}</p>
+                <img src="{{ user.image.url }}" alt="{{ user.first_name }} {{ user.last_name }}">
+            </div>
+            <p>Email: {{ user.email }}</p>
+            <p>Должность: {{ user.role }}</p>
+            <p>Текущие проекты:</p>
+            <ul>
+                {% for project in user.project_set.all %}
+                    <li>{{ project.title }}</li>
+                    <ul>Текущие задания:
+                        {% for task in project.task_set.all %}
+                            {% if task.assigned_to == user %}
+                                <li>{{ task.title }} - {% if task.is_completed %} Завершено {% else %} В процессе {% endif %}</li>
+                            {% endif %}
+                        {% empty %}
+                            <li>Нет текущих заданий</li>
+                        {% endfor %}
+                    </ul>
+                {% empty %}
+                    <li>Нет текущих проектов</li>
+                {% endfor %}
+            </ul>
+            <br>
+        {% endif %}
     {% endfor %}
 </body>
 </html>

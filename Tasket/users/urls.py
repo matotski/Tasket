@@ -1,9 +1,10 @@
 from django.urls import path
-from.views import index
+from .views import UserApiView
 
 
 app_name = 'users'
 
 urlpatterns = [
-    path('', index, name='index')
+    path('users', UserApiView.as_view()),
+    path('users/<int:pk>', UserApiView.as_view())
 ]
