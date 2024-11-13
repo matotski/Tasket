@@ -1,10 +1,8 @@
 from django.forms import model_to_dict
 from django.shortcuts import render
-from rest_framework.views import APIView
 from .models import User, Project, Task
-from rest_framework import generics
-from rest_framework.response import Response
-from .serializers import UserSerializer
+from rest_framework import viewsets
+from .serializers import UserSerializer, ProjectSerializer, TaskSerializer
 
 
 # def index(request):
@@ -15,31 +13,17 @@ from .serializers import UserSerializer
 #     }
 #     return render(request, 'index.html', context=context)
 
-class UserApiView(generics.ListAPIView):
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
-    def get(self, request):
-        u = User.objects.all()
-        return Response({"posts" : UserSerializer(u, many=True).data})
 
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        return Response({"post": serializer.data})
+class ProjectViewSet(viewsets.ModelViewSet):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
 
-    def put(self, request, *args, **kwargs):
-        pk = kwargs.get("pk", None)
-        if not pk:
-            return Response({"error": "Method PUT not allowed"})
 
-        try:
-            instance = User.objects.get(pk=pk)
-        except:
-            return Response({"error" : "Object does not exists"})
-
-        serializer = UserSerializer(data=request.data, instance=instance)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response({"post": serializer.data})
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer

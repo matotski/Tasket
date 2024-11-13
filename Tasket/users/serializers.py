@@ -3,9 +3,12 @@ from .models import User, Project, Task
 
 
 class UserSerializer(serializers.ModelSerializer):
+    projects = serializers.SerializerMethodField()
+    tasks = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'password', 'image']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role', 'password', 'image', 'projects', 'tasks']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -27,28 +30,41 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    @staticmethod
+    def get_projects(obj):
+        return [project.title for project in Project.objects.filter(users=obj)]
+
+    @staticmethod
+    def get_tasks(obj):
+        return [task.title for task in Task.objects.filter(assigned_to=obj)]
+
 
 class ProjectSerializer(serializers.ModelSerializer):
+    tasks = serializers.SerializerMethodField()
+
     class Meta:
         model = Project
-        fields = ['id', 'title', 'description', 'deadline', 'users']
+        fields = ['id', 'title', 'description', 'deadline','tasks', 'users']
 
     def create(self, validated_data):
         users_data = validated_data.pop('users', [])
         project = Project.objects.create(**validated_data)
-        project.users.set(users_data)  # Устанавливаем пользователей
+        project.users.set(users_data)
         return project
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
         instance.deadline = validated_data.get('deadline', instance.deadline)
-        users_data = validated_data.pop('users', None)
+        users_data = validated_data.get('users', instance.users)
         if users_data is not None:
             instance.users.set(users_data)
         instance.save()
         return instance
 
+    @staticmethod
+    def get_tasks(obj):
+        return [task.title for task in Task.objects.filter(project=obj)]
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
