@@ -1,8 +1,8 @@
 from django.forms import model_to_dict
 from django.shortcuts import render
-from .models import User, Project, Task
+from .models import User, Project, Task, UserProjectRole
 from rest_framework import viewsets
-from .serializers import UserSerializer, ProjectSerializer, TaskSerializer
+from .serializers import UserSerializer, ProjectSerializer, TaskSerializer, UserProjectRoleSerializer
 
 
 # def index(request):
@@ -17,6 +17,11 @@ from .serializers import UserSerializer, ProjectSerializer, TaskSerializer
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class UserProjectRoleViewSet(viewsets.ModelViewSet):
+    queryset = UserProjectRole.objects.all()
+    serializer_class = UserProjectRoleSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):

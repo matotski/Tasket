@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.db.models import JSONField
+
 
 
 class User(AbstractUser):
@@ -34,19 +34,49 @@ class User(AbstractUser):
 class Project(models.Model):
     title = models.CharField(max_length=150)
     description = models.TextField()
-    deadline = models.DateTimeField()
-    users = models.ManyToManyField(User)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=50,
+                              choices=[
+                                  ('active', 'Активен'),
+                                  ('archived', 'Архивирован')
+                              ])
+    users = models.ManyToManyField(User, through='UserProjectRole')
 
     def __str__(self):
         return f"{self.title}"
 
+class UserProjectRole(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=150, choices=User.CHOICES)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.role} in {self.project.title}"
 
 class Task(models.Model):
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
     assigned_to = models.ForeignKey(to=User, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=150)
     description = models.TextField()
-    is_completed = models.BooleanField(default=False)
+    status = models.CharField(max_length=50,
+                              choices=[
+                                  ('grooming', 'Grooming'),
+                                  ('in_progress', 'In Progress'),
+                                  ('dev', 'Dev'),
+                                  ('done', 'Done')
+                              ])
+    priority = models.CharField(max_length=20,
+                                choices=[
+                                    ('low', 'Низкий'),
+                                    ('medium', 'Средний'),
+                                    ('high', 'Высокий')
+                                ])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    due_date = models.DateTimeField()
+
+
 
     def __str__(self):
         return f"{self.title}"
