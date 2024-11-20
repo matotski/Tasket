@@ -1,15 +1,21 @@
 from rest_framework import serializers
-from .models import User, Project, Task, UserProjectRole
+from .models import User, Project, Task, UserProjectRole, Role
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id','name']
 
 
 class UserSerializer(serializers.ModelSerializer):
     projects = serializers.SerializerMethodField()
     tasks = serializers.SerializerMethodField()
-    roles_in_projects = serializers.SerializerMethodField()
+    roles = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role', 'roles_in_projects', 'password', 'image', 'projects', 'tasks']
+        fields = ['id', 'image', 'username', 'first_name', 'last_name', 'email','password', 'projects', 'roles', 'tasks']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -40,45 +46,51 @@ class UserSerializer(serializers.ModelSerializer):
         return [task.title for task in Task.objects.filter(assigned_to=obj)]
 
     @staticmethod
-    def get_roles_in_projects(obj):
+    def get_roles(obj):
         return [
             {
                 'project': user_role.project.title,
-                'role': user_role.role
+                'role': user_role.role.name if user_role.role else None
             }
             for user_role in UserProjectRole.objects.filter(user=obj)
         ]
 
 
+class UserProjectRoleSerializer(serializers.ModelSerializer):
+    role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    class Meta:
+        model = UserProjectRole
+        fields = ['user', 'role']
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     tasks = serializers.SerializerMethodField()
-    users_with_roles = serializers.SerializerMethodField()
+    users = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'title', 'description', 'created_at', 'updated_at', 'status', 'tasks', 'users_with_roles']
+        fields = ['id', 'title', 'description', 'created_at', 'updated_at', 'status', 'tasks', 'users']
 
     def create(self, validated_data):
-        users_data = validated_data.pop('users_with_roles', [])
+        users_data = validated_data.pop('members', {})
         project = Project.objects.create(**validated_data)
         for user_data in users_data:
-            user = User.objects.get(id=user_data['user'])
-            role = user_data['role']
-            UserProjectRole.objects.create(project=project,user=user,role=role)
+            user_id = user_data['user']
+            role_id = user_data.get('role')
+            UserProjectRole.objects.create(project=project, user_id=user_id, role_id=role_id)
         return project
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
         instance.status = validated_data.get('status', instance.status)
-        users_data = validated_data.get('users_with_roles', [])
+        users_data = validated_data.get('members', {})
         instance.save()
-        if users_data:
-            instance.userprojectrole_set.all().delete()
-            for user_data in users_data:
-                user = user_data['user']
-                role = user_data['role']
-                UserProjectRole.objects.create(project=instance, user=user, role=role)
+        for user_data in users_data:
+            user_id = user_data['user']
+            role_id = user_data.get('role')
+            UserProjectRole.objects.update_or_create(project = instance, user_id = user_id, defaults = {'role_id': role_id})
         return instance
 
     @staticmethod
@@ -86,27 +98,17 @@ class ProjectSerializer(serializers.ModelSerializer):
         return [task.title for task in Task.objects.filter(project=obj)]
 
     @staticmethod
-    def get_users_with_roles(obj):
+    def get_users(obj):
         return [
             {
-                'user': user_role.user.username,
-                'role': user_role.role
+                'user': f"{user_role.user.first_name} {user_role.user.last_name}",
+                "role": RoleSerializer(user_role.role).data if user_role.role else None
             }
-        for user_role in UserProjectRole.objects.filter(project=obj)
+            for user_role in UserProjectRole.objects.filter(project=obj)
         ]
 
 
-class UserProjectRoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ['id', 'project', 'user', 'role']
 
-    def create(self, validated_data):
-        return UserProjectRole.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.role = validated_data.get('role', instance.role)
-        instance.save()
-        return instance
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:

@@ -4,31 +4,15 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
-    CHOICES = [
-        ("Admin", "Администратор"),
-        ("PM1", "Менеджер проекта"),
-        ("PM2", "Старший менеджер проекта"),
-        ("EMP1", "Сотрудник"),
-        ("EMP2", "Старший сотрудник"),
-        ("DATA1", "Аналитик"),
-        ("DATA2", "Старший аналитик"),
-        ("DES1", "Дизайнер"),
-        ("DES2", "Старший дизайнер"),
-        ("DEV1", "Разработчик"),
-        ("DEV2", "Старший разработчик"),
-        ("QA1", "Тестировщик"),
-        ("QA2", "Старший тестировщик"),
-    ]
     username = models.CharField(max_length=150, unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     email = models.EmailField()
-    role = models.CharField(max_length=150, choices=CHOICES)
     password = models.CharField(max_length=200)
-    image = models.ImageField(upload_to="users_image", default='users_image/avatar.png', null=True, blank=True)
+    image = models.ImageField(upload_to="users_image", default='users_image/avatar.png', blank=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}: {self.role}"
+        return f"{self.first_name} {self.last_name}"
 
 
 class Project(models.Model):
@@ -46,13 +30,22 @@ class Project(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+
+class Role(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class UserProjectRole(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=150, choices=User.CHOICES)
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
+    role = models.ForeignKey(to=Role, max_length=150, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.user.username} - {self.role} in {self.project.title}"
+
 
 class Task(models.Model):
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
@@ -75,6 +68,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     due_date = models.DateTimeField()
+    # tester
 
 
 
