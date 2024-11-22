@@ -44,7 +44,7 @@ class UserProjectRole(models.Model):
     role = models.ForeignKey(to=Role, max_length=150, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.user.username} - {self.role} in {self.project.title}"
+        return f"{self.user.first_name} {self.user.last_name} - {self.role}"
 
 
 class Task(models.Model):
@@ -68,9 +68,10 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     due_date = models.DateTimeField()
-    # tester
+    tester = models.ForeignKey(to=UserProjectRole, on_delete=models.SET_NULL, blank=True, null=True)
 
 
 
     def __str__(self):
         return f"{self.title}"
+

@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import serializers
 from .models import User, Project, Task, UserProjectRole, Role
 
@@ -5,7 +6,7 @@ from .models import User, Project, Task, UserProjectRole, Role
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = ['id','name']
+        fields = ['id', 'name']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -15,7 +16,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'image', 'username', 'first_name', 'last_name', 'email','password', 'projects', 'roles', 'tasks']
+        fields = ['id', 'image', 'username', 'first_name', 'last_name', 'email', 'password', 'projects', 'roles',
+                  'tasks']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -43,7 +45,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_tasks(obj):
-        return [task.title for task in Task.objects.filter(assigned_to=obj)]
+        return [
+            {
+               'project': task.project.title,
+               'task': task.title
+            }
+            for task in Task.objects.filter(assigned_to=obj)
+        ]
 
     @staticmethod
     def get_roles(obj):
@@ -59,6 +67,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserProjectRoleSerializer(serializers.ModelSerializer):
     role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
     class Meta:
         model = UserProjectRole
         fields = ['user', 'role']
@@ -90,7 +99,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         for user_data in users_data:
             user_id = user_data['user']
             role_id = user_data.get('role')
-            UserProjectRole.objects.update_or_create(project = instance, user_id = user_id, defaults = {'role_id': role_id})
+            UserProjectRole.objects.update_or_create(project=instance, user_id=user_id, defaults={'role_id': role_id})
         return instance
 
     @staticmethod
@@ -108,12 +117,14 @@ class ProjectSerializer(serializers.ModelSerializer):
         ]
 
 
-
-
 class TaskSerializer(serializers.ModelSerializer):
+    tester = serializers.PrimaryKeyRelatedField(queryset=UserProjectRole.objects.filter(Q(role__name__icontains="тестировщик") | Q(role__name__icontains="Тестировщик")),
+                                                allow_null=True)
+
     class Meta:
         model = Task
-        fields = ['id', 'project', 'assigned_to', 'title', 'description', 'status', 'priority', 'created_at', 'updated_at', 'due_date']
+        fields = ['id', 'project', 'assigned_to', 'title', 'description', 'status', 'priority', 'created_at',
+                  'updated_at', 'due_date', 'tester']
 
     def create(self, validated_data):
         return Task.objects.create(**validated_data)
@@ -128,5 +139,3 @@ class TaskSerializer(serializers.ModelSerializer):
         instance.due_date = validated_data.get('due_date', instance.due_date)
         instance.save()
         return instance
-
-
