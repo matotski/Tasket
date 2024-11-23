@@ -2,10 +2,10 @@ from django.forms import model_to_dict
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
-from .models import User, Project, Task, UserProjectRole, Role
+from .models import User, Project, Task, UserProjectRole, Role, Comment
 from rest_framework import viewsets, status
 from rest_framework import filters as drf_filters
-from .serializers import UserSerializer, ProjectSerializer, TaskSerializer, UserProjectRoleSerializer, RoleSerializer
+from .serializers import UserSerializer, ProjectSerializer, TaskSerializer, UserProjectRoleSerializer, RoleSerializer, CommentSerializer
 from .filters import TaskFilter
 from django_filters import rest_framework as filters
 
@@ -53,6 +53,14 @@ class UserProjectRoleViewSet(viewsets.ModelViewSet):
         )
         return Response(self.get_serializer(user_project_role).data, status=status.HTTP_201_CREATED)
 
+    def destroy(self, request, project_pk=None, pk=None):
+        try:
+            user_project_role = self.get_queryset().get(pk=pk)
+            user_project_role.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except UserProjectRole.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
@@ -65,3 +73,9 @@ class TaskViewSet(viewsets.ModelViewSet):
     filterset_class = TaskFilter
     ordering_fields = ['status', 'priority', 'assigned_to', 'created_at', 'updated_at', 'title']
     ordering = ['created_at']
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+

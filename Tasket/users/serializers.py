@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework import serializers
-from .models import User, Project, Task, UserProjectRole, Role
+from .models import User, Project, Task, UserProjectRole, Role, Comment
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -111,7 +111,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         return [
             {
                 'user': f"{user_role.user.first_name} {user_role.user.last_name}",
-                "role": RoleSerializer(user_role.role).data if user_role.role else None
+                "role": RoleSerializer(user_role.role).data['id'] if user_role.role else None
             }
             for user_role in UserProjectRole.objects.filter(project=obj)
         ]
@@ -120,11 +120,12 @@ class ProjectSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     tester = serializers.PrimaryKeyRelatedField(queryset=UserProjectRole.objects.filter(Q(role__name__icontains="тестировщик") | Q(role__name__icontains="Тестировщик")),
                                                 allow_null=True)
+    comment = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
         fields = ['id', 'project', 'assigned_to', 'title', 'description', 'status', 'priority', 'created_at',
-                  'updated_at', 'due_date', 'tester']
+                  'updated_at', 'due_date', 'tester', 'comment']
 
     def create(self, validated_data):
         return Task.objects.create(**validated_data)
@@ -139,3 +140,22 @@ class TaskSerializer(serializers.ModelSerializer):
         instance.due_date = validated_data.get('due_date', instance.due_date)
         instance.save()
         return instance
+
+    @staticmethod
+    def get_comment(obj):
+        return [
+            {
+                "created_at": comment.created_at,
+                "text": comment.text
+            }
+        for comment in Comment.objects.filter(task=obj)
+        ]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'task', 'created_at', 'text']
+
+    def create(self, validated_data):
+        return Comment.objects.create(**validated_data)

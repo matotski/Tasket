@@ -41,7 +41,7 @@ class Role(models.Model):
 class UserProjectRole(models.Model):
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
     user = models.ForeignKey(to=User, on_delete=models.CASCADE)
-    role = models.ForeignKey(to=Role, max_length=150, on_delete=models.CASCADE)
+    role = models.ForeignKey(to=Role, max_length=150, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} - {self.role}"
@@ -75,3 +75,8 @@ class Task(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+
+class Comment(models.Model):
+    task = models.ForeignKey(to=Task, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    text = models.TextField()
