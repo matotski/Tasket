@@ -10,14 +10,15 @@ class RoleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    projects = serializers.SerializerMethodField()
+    active_projects = serializers.SerializerMethodField()
     tasks = serializers.SerializerMethodField()
     roles = serializers.SerializerMethodField()
+    all_projects = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'image', 'username', 'first_name', 'last_name', 'email', 'password', 'projects', 'roles',
-                  'tasks']
+        fields = ['id', 'image', 'username', 'first_name', 'last_name', 'email', 'password', 'active_projects', 'roles',
+                  'tasks', 'all_projects']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -40,8 +41,8 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
     @staticmethod
-    def get_projects(obj):
-        return [project.title for project in Project.objects.filter(users=obj)]
+    def get_active_projects(obj):
+        return [project.title for project in Project.objects.filter(users=obj, status="active")]
 
     @staticmethod
     def get_tasks(obj):
@@ -63,6 +64,9 @@ class UserSerializer(serializers.ModelSerializer):
             for user_role in UserProjectRole.objects.filter(user=obj)
         ]
 
+    @staticmethod
+    def get_all_projects(obj):
+        return [project.title for project in Project.objects.filter(users=obj, status="archived")]
 
 class UserProjectRoleSerializer(serializers.ModelSerializer):
     role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())
@@ -71,6 +75,8 @@ class UserProjectRoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProjectRole
         fields = ['user', 'role']
+
+
 
 
 class ProjectSerializer(serializers.ModelSerializer):

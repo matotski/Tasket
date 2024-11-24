@@ -33,6 +33,7 @@ class Project(models.Model):
 
 class Role(models.Model):
     name = models.CharField(max_length=50)
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.name}"
