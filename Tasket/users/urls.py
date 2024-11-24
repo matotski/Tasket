@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-# from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import UserViewSet, ProjectViewSet, TaskViewSet, RoleViewSet, UserProjectRoleViewSet, CommentViewSet #RegisterView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .views import UserViewSet, ProjectViewSet, TaskViewSet, RoleViewSet, UserProjectRoleViewSet, CommentViewSet, RegisterView
 
 app_name = 'users'
 
@@ -29,7 +29,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path('projects/<int:project_pk>/', include(project_router.urls)),
     path('projects/<int:project_pk>/tasks/<int:task_pk>/', include(task_router.urls)),
-    # path('token/', TokenObtainPairView.as_view()),
-    # path('token/refresh/', TokenRefreshView.as_view()),
-    # path('register/', RegisterView.as_view(), name='register'),
+    path('token/', TokenObtainPairView.as_view()),
+    path('token/refresh/', TokenRefreshView.as_view()),
+    path('register/', RegisterView.as_view(), name='register'),
 ]

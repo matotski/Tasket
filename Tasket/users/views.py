@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from .models import User, Project, Task, UserProjectRole, Role, Comment
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework import filters as drf_filters
 from .serializers import UserSerializer, ProjectSerializer, TaskSerializer, UserProjectRoleSerializer, RoleSerializer, CommentSerializer
 from .filters import TaskFilter
@@ -99,3 +99,16 @@ class CommentViewSet(viewsets.ModelViewSet):
         comment = serializer.save(task_id=task_pk)
         return Response(self.get_serializer(comment).data, status=status.HTTP_201_CREATED)
 
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({
+            "user": serializer.data,
+            "message": "User  created successfully. You can now log in."
+        }, status=status.HTTP_201_CREATED)
