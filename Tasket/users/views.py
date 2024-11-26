@@ -59,12 +59,13 @@ class UserProjectRoleViewSet(viewsets.ModelViewSet):
                 project=project, user=user, role=role
             )
             user_email = user.email
-            send_mail(
-                "Вас добавили в проект",
-                f"Вас добавили в проект {project.title}",
-                "jamalsigma11@gmail.com",
-                [user_email],
-            )
+            # send_mail(
+            #     "Вас добавили в проект",
+            #     f"Вас добавили в проект {project.title}",
+            #     "jamalsigma11@gmail.com",
+            #     [user_email],
+            # )
+            print(f"'Вас добавили в проект {project.title}', отправлено на почту {user_email}")
             return Response(
                 self.get_serializer(user_project_role).data,
                 status=status.HTTP_201_CREATED,
@@ -106,6 +107,10 @@ class RoleViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
+    filter_backends = [DjangoFilterBackend, drf_filters.OrderingFilter]
+    filterset_class = TaskFilter
+    ordering_fields = ['status', 'priority', 'assigned_to', 'created_at', 'updated_at', 'title']
+    ordering = ['created_at']
 
     def get_queryset(self):
         project_id = self.kwargs.get("project_pk")

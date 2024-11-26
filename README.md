@@ -69,11 +69,26 @@
    EXPOSE 8000
 
    CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-3. Постройте Docker-образ
+3. Убедитесь, что у вас есть файл docker-compose.yml с содержимым:
    ```bash
-   docker build -t my-django-app .
-4. Запустите контейнер
+   version: '3.13'
+
+   services:
+   web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    command: python manage.py runserver 0.0.0.0:8000
+
+   volumes:
+   db_data:
+4. Запустите контейнер с помощью Docker Compose:
    ```bash
-   docker run -p 8000:8000 my-django-app
+   docker-compose up --build
 Теперь вы можете получить доступ к вашему приложению в браузере по адресу:
 http://localhost:8000

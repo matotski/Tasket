@@ -42,7 +42,6 @@ class UserSerializer(serializers.ModelSerializer):
         instance.first_name = validated_data.get("first_name", instance.first_name)
         instance.last_name = validated_data.get("last_name", instance.last_name)
         instance.email = validated_data.get("email", instance.email)
-        instance.role = validated_data.get("role", instance.role)
         if "password" in validated_data:
             instance.set_password(validated_data["password"])
         instance.image = validated_data.get("image", instance.image)
