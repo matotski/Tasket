@@ -13,8 +13,8 @@
 ## Установка
 1. Клонируйте репозиторий:
    ```bash
-   git clone https://github.com/yourusername/yourproject.git
-   cd yourproject
+   git clone https://github.com/matotski/Tasket.git
+   cd Tasket
    
 2. Создайте виртуальное окружение и активируйте его:
     ```bash
